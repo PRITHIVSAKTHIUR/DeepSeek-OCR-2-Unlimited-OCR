@@ -1,105 +1,101 @@
-# **DeepSeek-OCR-2-Demo**
+# **DeepSeek-OCR-2-Unlimited-OCR**
 
-> A Gradio-based interactive web application for **DeepSeek-OCR-2**, a multimodal model designed for advanced optical character recognition and document understanding. This application allows users to perform various OCR tasks such as converting documents to markdown, extracting text, locating specific text within images, and parsing figures, all through a user-friendly interface. This demo leverages the `deepseek-ai/DeepSeek-OCR-2` model with `flash-attention-2` for efficient inference on NVIDIA GPUs.
+DeepSeek-OCR-2-Unlimited-OCR is an advanced, experimental visual document processing and open-ended text localization dashboard. This application establishes a unified interface that allows users to swap between two premier vision-language document models: `deepseek-ai/DeepSeek-OCR-2` and `baidu/Unlimited-OCR`.
 
-<img width="1918" height="1343" alt="Screenshot 2026-02-05 at 13-48-41 DeepSeek-OCR-2-Demo - a Hugging Face Space by prithivMLmods" src="https://github.com/user-attachments/assets/10ea76a0-6813-4118-a04c-f236b42db2e7" />
+The core system handles document-to-markdown conversion, mathematical layout rendering, dense object localization, and raw textual extraction. Crucially, the platform leverages structured parsing loops to capture coordinate boundaries (`<|ref|>` and `<|det|>`), dynamically painting multi-colored bounding boxes directly on the document while segmenting and extracting sub-figure graphics into a standalone output gallery. Fully optimized via specialized Flash Attention 2 layers, the app operates as a localized, high-speed vision suite tailored for complex multi-lingual document intelligence.
 
-## Features
+### **Key Features**
 
-* **Multiple Task Modes**:
-* **Markdown**: Converts document images directly into structured markdown.
-* **Free OCR**: General purpose text extraction.
-* **OCR Image**: Performs OCR with grounding capabilities.
-* **Parse Figure**: Specifically optimized for understanding and describing figures or charts.
-* **Locate**: Finds specific text within an image and highlights it with bounding boxes.
-* **Describe**: Provides a detailed textual description of the image content.
-* **Custom**: Allows users to input custom prompts for specialized tasks.
+* **Dual-Backbone Document Intelligence:** Seamlessly switch between the highly structural `DeepSeek-OCR-2` architecture (optimized with Flash Attention 2) and the long-context `Unlimited-OCR` model capable of matching up to 32,768 tokens.
+* **Granular Visual Grounding:** Programmatically maps detected text lines, headings, and embedded graphics into precise spatial bounding boxes.
+* **Sub-Figure Graphic Cropping:** Automatically captures figure bounding boxes, crops target graphics from the primary source image canvas, and populates them into an interactive Gradio thumbnail gallery.
+* **Adaptive Aspect Resolution Profiles:** Offers multi-stage processing configs (e.g., Default, Quality, Fast, No Crop, Gundam) to scale internal dimensions up to $1536^2$ while handling aspect ratios smoothly.
+* **Bespoke Dodger Blue UI Architecture:** Enclosed inside a tailored, web-responsive blueprint featuring a grid backdrop, explicit multiline code blocks, dedicated Markdown layout previews, and full layout state synchronization.
 
+### **Repository Structure**
 
-* **Visual Grounding**: Supports bounding box visualization for located text and detected elements.
-* **Resolution Control**: Offers multiple processing resolutions (Default, Quality, Fast, No Crop, Small) to balance speed and accuracy.
-* **Markdown Preview**: Renders extracted text as markdown for easy verification.
-* **Cropped Element Extraction**: Automatically extracts and displays cropped images of detected figures or regions of interest.
-
-## Prerequisites
-
-* Python 3.10
-* NVIDIA GPU with CUDA support (Application uses `torch.bfloat16` and `flash-attention-2`).
-* Linux environment (recommended for Flash Attention compatibility).
-
-## Installation
-
-1. **Clone the repository**
-```bash
-git clone https://github.com/PRITHIVSAKTHIUR/DeepSeek-OCR-2-Demo.git
-cd DeepSeek-OCR-2-Demo
+```text
+├── demo-notebook/
+│   └── DeepSeek_OCR_2_Demo.ipynb
+├── examples/
+│   ├── 1.jpg
+│   ├── 2.jpg
+│   └── 3.jpg
+├── deepseek_ocr_2_unlimited_ocr.py
+├── LICENSE.txt
+├── pre-requirements.txt
+├── README.md
+└── requirements.txt
 
 ```
 
+### **Installation and Requirements**
 
-2. **Install Dependencies**
-It is recommended to use a virtual environment. Install the required packages using `pip`.
-*Note: The `requirements.txt` includes a direct link to a precompiled Flash Attention wheel. Ensure your CUDA and Torch versions match if you are not using the specific setup listed below.*
+To initialize the DeepSeek-OCR-2-Unlimited-OCR suite locally, configure a **Python 3.10** environment with the exact deep learning stack specified below. A local system containing a dedicated CUDA cu12-enabled GPU is required.
+
+**1. Upgrade Package Manager**
+Update your system package installer before fetching modern pre-compiled wheel distributions:
+
+```bash
+pip install pip>=26.0.0
+
+```
+
+**2. Install Core Stack**
+Install the explicit **PyTorch 2.8.0 and CUDA cu12** dependencies, alongside specialized Flash Attention 2 binaries. Place these inside a `requirements.txt` file and run:
+
 ```bash
 pip install -r requirements.txt
 
 ```
 
+#### **Core Requirements List (`requirements.txt`)**
 
-**requirements.txt content:**
 ```text
-flash-attn @ https://github.com/Dao-AILab/flash-attention/releases/download/v2.7.3/flash_attn-2.7.3+cu12torch2.6cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
-transformers==4.46.3
+flash-attn @ https://huggingface.co/strangertoolshf/flash_attention_2_wheelhouse/resolve/main/wheelhouse-flash_attn-2.8.3/linux_x86_64/torch2.8/cu12/abiFALSE/cp310/flash_attn-2.8.3+cu12torch2.8cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+git+https://github.com/huggingface/transformers.git@v4.46.3
+git+https://github.com/huggingface/accelerate.git
+git+https://github.com/huggingface/diffusers.git
+git+https://github.com/huggingface/peft.git
 tokenizers==0.20.3
-torch==2.6.0
+huggingface_hub
+sentencepiece
+torch==2.8.0
 torchvision
+matplotlib
+accelerate
 easydict
-einops
 addict
-gradio
+gradio==6.9.0
+einops
+spaces
+numpy
 
 ```
 
+---
 
+### **Usage**
 
-## Usage
+Once your compiled infrastructure wheels and underlying tokenizer layers have successfully loaded, launch the script locally:
 
-1. **Run the Application**
-Execute the main python script to launch the Gradio server.
 ```bash
-python deepseek_ocr_v2_demo.py
+python deepseek_ocr_2_unlimited_ocr.py
 
 ```
 
+Upon initialization, the system pre-loads the default model weights into device VRAM. Open your web browser to the local network link (typically `http://127.0.0.1:7860/`).
 
-2. **Access the Interface**
-Open your web browser and navigate to the local URL provided in the terminal (usually `http://127.0.0.1:7860`).
-3. **Perform OCR**
-* **Upload Image**: Drag and drop or select an image (JPG, PNG, etc.).
-* **Select Resolution**: Choose a mode (e.g., "Default" for general use, "Quality" for dense text).
-* **Select Task**: Choose the specific operation you want to perform (e.g., "Markdown", "Locate").
-* **Prompt (Optional)**: If using "Custom" or "Locate" modes, enter your text query.
-* **Click "Perform OCR"**: The model will process the image and display results in the tabs on the right.
+1. **Upload Asset:** Drop an image document, textbook page, invoice, or diagram into the **Upload Image** zone (supports direct clipboard pasting).
+2. **Configure Pipeline:** Select your target Model backbone, adjust the Resolution profile, and pick an operational task:
+* **Markdown:** Converts layout formats directly to standard Markdown, embedding tables, formulas, and structural text.
+* **OCR Image / Free OCR:** Extracts pure textual elements line by line.
+* **Locate:** Enter custom words inside the prompt line to programmatically locate text positions.
 
 
+3. **Execute:** Click **Perform OCR**. Each model is lazy-loaded on its first selection and cached subsequently on the GPU. Explore the generated data across the dedicated *Text*, *Markdown Preview*, *Boxes*, *Cropped Images*, and *Raw Text* tab layouts.
 
-## Application Structure
+### **License and Source**
 
-* `deepseek_ocr_v2_demo.py`: The main entry point containing the Gradio UI logic and model inference pipeline.
-* `requirements.txt`: Python dependencies.
-* `examples/`: Directory containing sample images for testing (ensure this folder exists if running locally with examples).
-
-## Technical Details
-
-* **Model**: `deepseek-ai/DeepSeek-OCR-2`
-* **Precision**: `bfloat16`
-* **Attention Mechanism**: `flash_attention_2`
-* **Framework**: PyTorch 2.6.0, Transformers 4.46.3, Gradio
-
-## License
-
-Please refer to the repository for license information regarding the code and the model usage.
-
-## Repository
-
-[https://github.com/PRITHIVSAKTHIUR/DeepSeek-OCR-2-Demo.git](https://github.com/PRITHIVSAKTHIUR/DeepSeek-OCR-2-Demo.git)
+* **License:** [Apache License 2.0](https://github.com/PRITHIVSAKTHIUR/DeepSeek-OCR-2-Unlimited-OCR/blob/main/LICENSE.txt)
+* **GitHub Repository:** [https://github.com/PRITHIVSAKTHIUR/DeepSeek-OCR-2-Unlimited-OCR.git](https://github.com/PRITHIVSAKTHIUR/DeepSeek-OCR-2-Unlimited-OCR.git)
