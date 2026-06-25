@@ -5,6 +5,7 @@ import os
 import sys
 import tempfile
 import shutil
+import ast
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import re
 import numpy as np
@@ -161,9 +162,34 @@ TASK_PROMPTS = {
     "Custom": {"prompt": "", "has_grounding": False}
 }
 
+REF_DET_PATTERN = re.compile(r'<\|ref\|>(.*?)<\|/ref\|><\|det\|>(.*?)<\|/det\|>', re.DOTALL)
+DET_ONLY_PATTERN = re.compile(
+    r'<\|det\|>([^\[<]+?)\s*\[\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\]<\|/det\|>',
+    re.DOTALL
+)
+
 def extract_grounding_references(text):
-    pattern = r'(<\|ref\|>(.*?)<\|/ref\|><\|det\|>(.*?)<\|/det\|>)'
-    return re.findall(pattern, text, re.DOTALL)
+    refs = []
+    matched_spans = []
+
+    for m in REF_DET_PATTERN.finditer(text):
+        label, boxes_str = m.group(1), m.group(2)
+        try:
+            boxes = ast.literal_eval(boxes_str)
+            if boxes and not isinstance(boxes[0], (list, tuple)):
+                boxes = [boxes]
+        except (ValueError, SyntaxError):
+            continue
+        refs.append((m.group(0), label.strip(), boxes))
+        matched_spans.append((m.start(), m.end()))
+
+    for m in DET_ONLY_PATTERN.finditer(text):
+        if any(start <= m.start() < end for start, end in matched_spans):
+            continue
+        label, x1, y1, x2, y2 = m.group(1), m.group(2), m.group(3), m.group(4), m.group(5)
+        refs.append((m.group(0), label.strip(), [[int(x1), int(y1), int(x2), int(y2)]]))
+
+    return refs
 
 def get_font(size=15):
     """Attempt to load a font, falling back to default if necessary."""
@@ -191,17 +217,11 @@ def draw_bounding_boxes(image, refs, extract_images=False):
     color_map = {}
     np.random.seed(42)
 
-    for ref in refs:
-        label = ref[1]
+    for _, label, coords in refs:
         if label not in color_map:
             color_map[label] = (np.random.randint(50, 255), np.random.randint(50, 255), np.random.randint(50, 255))
 
         color = color_map[label]
-        try:
-            coords = eval(ref[2])
-        except:
-            continue
-            
         color_a = color + (60,)
         
         for box in coords:
@@ -226,19 +246,33 @@ def draw_bounding_boxes(image, refs, extract_images=False):
 def clean_output(text, include_images=False):
     if not text:
         return ""
-    pattern = r'(<\|ref\|>(.*?)<\|/ref\|><\|det\|>(.*?)<\|/det\|>)'
-    matches = re.findall(pattern, text, re.DOTALL)
     img_num = 0
-    
-    for match in matches:
-        if '<|ref|>image<|/ref|>' in match[0]:
+
+    # DeepSeek-OCR-2 style: tag pair is its own metadata line — drop the line.
+    for m in list(REF_DET_PATTERN.finditer(text)):
+        full, label = m.group(0), m.group(1).strip()
+        if label == 'image':
             if include_images:
-                text = text.replace(match[0], f'\n\n**[Figure {img_num + 1}]**\n\n', 1)
+                text = text.replace(full, f'\n\n**[Figure {img_num + 1}]**\n\n', 1)
                 img_num += 1
             else:
-                text = text.replace(match[0], '', 1)
+                text = text.replace(full, '', 1)
         else:
-            text = re.sub(rf'(?m)^[^\n]*{re.escape(match[0])}[^\n]*\n?', '', text)
+            text = re.sub(rf'(?m)^[^\n]*{re.escape(full)}[^\n]*\n?', '', text, count=1)
+
+    # Unlimited-OCR style: tag is inline, immediately followed by the actual
+    # recognized text on the same line — strip only the tag itself, never
+    # the line, or the OCR'd text right after it gets deleted too.
+    for m in list(DET_ONLY_PATTERN.finditer(text)):
+        full, label = m.group(0), m.group(1).strip()
+        if label == 'image':
+            if include_images:
+                text = text.replace(full, f'\n\n**[Figure {img_num + 1}]**\n\n', 1)
+                img_num += 1
+            else:
+                text = text.replace(full, '', 1)
+        else:
+            text = text.replace(full, '', 1)
     
     text = text.replace('\\coloneqq', ':=').replace('\\eqqcolon', '=:')
     
@@ -315,8 +349,8 @@ def process_image(image, model_choice, mode, task, custom_prompt):
     
     img_out = None
     crops = []
-    
-    if has_grounding and '<|ref|>' in result:
+
+    if has_grounding:
         refs = extract_grounding_references(result)
         if refs:
             img_out, crops = draw_bounding_boxes(image, refs, True)
@@ -681,7 +715,9 @@ with gr.Blocks() as demo:
             with gr.Accordion("Note", open=False):
                 gr.Markdown(
                     "Inference using Huggingface transformers on NVIDIA GPUs. "
-                    "Each model is lazy-loaded on first selection and then cached on GPU for the rest of the session."
+                    "Each model is lazy-loaded on first selection and then cached on GPU for the rest of the session. "
+                    "Box detection on the Boxes/Cropped Images tabs works for both models — DeepSeek-OCR-2's "
+                    "ref+det tag pairs and Unlimited-OCR's inline det-only tags are both parsed."
                 )
     
     model_choice.change(update_resolution_choices, [model_choice], [mode])
