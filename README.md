@@ -4,6 +4,10 @@ DeepSeek-OCR-2-Unlimited-OCR is an advanced, experimental visual document proces
 
 The core system handles document-to-markdown conversion, mathematical layout rendering, dense object localization, and raw textual extraction. Crucially, the platform leverages structured parsing loops to capture coordinate boundaries (`<|ref|>` and `<|det|>`), dynamically painting multi-colored bounding boxes directly on the document while segmenting and extracting sub-figure graphics into a standalone output gallery. Fully optimized via specialized Flash Attention 2 layers, the app operates as a localized, high-speed vision suite tailored for complex multi-lingual document intelligence.
 
+| example 1 | example 2 |
+|-----------|-----------|
+| <img src="https://github.com/user-attachments/assets/d35ecc59-339f-4436-b6a1-b793a831b499" width="100%"> | <img src="https://github.com/user-attachments/assets/cc6f78ee-3b39-4850-8449-9643163469ff" width="100%"> |
+
 ### **Key Features**
 
 * **Dual-Backbone Document Intelligence:** Seamlessly switch between the highly structural `DeepSeek-OCR-2` architecture (optimized with Flash Attention 2) and the long-context `Unlimited-OCR` model capable of matching up to 32,768 tokens.
