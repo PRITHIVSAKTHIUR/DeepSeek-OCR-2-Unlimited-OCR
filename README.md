@@ -1,4 +1,4 @@
-# **DeepSeek-OCR-2-Unlimited-OCR**
+# **[DeepSeek-OCR-2-Unlimited-OCR](https://huggingface.co/spaces/prithivMLmods/DeepSeek-OCR-2-Unlimited-OCR)**
 
 DeepSeek-OCR-2-Unlimited-OCR is an advanced, experimental visual document processing and open-ended text localization dashboard. This application establishes a unified interface that allows users to swap between two premier vision-language document models: `deepseek-ai/DeepSeek-OCR-2` and `baidu/Unlimited-OCR`.
 
